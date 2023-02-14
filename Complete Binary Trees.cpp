@@ -1,7 +1,22 @@
 // Complete Binary Tree implementation
 #include <iostream>
+#include <iomanip>
+#include <windows.h>
+#include <cmath>
 #include <queue>
 using namespace std;
+
+// function to get width for the terminal
+int get_terminal_size(int width) {
+    
+    // needs the window.h header file
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+
+    // calculating width and height and type-casting to int
+    width = (int)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
+    return width;
+}
 
 class Node{
 public:
@@ -81,23 +96,6 @@ public:
         cout << focusNode -> data << "   ";
     }
 
-    // function to print all the traversals
-    void printTree(Node* focusNode) {
-        cout << "\nInorder traversal: ";
-        printInorder(focusNode);
-
-        cout <<"\nPreorder traversal: ";
-        printPreorder(focusNode);
-
-        cout << "\nPostorder traversal: ";
-        printPostorder(focusNode);
-
-        cout << "\nLevelorder traversal: ";
-        printLevelorder(focusNode);
-
-        cout << endl;
-    }
-
     // function for level order traversal (Breadth - first)
     void printLevelorder(Node* focusNode) {
         if (focusNode == nullptr)
@@ -122,6 +120,23 @@ public:
         }
     }
 
+    // function to print all the traversals
+    void printTree(Node* focusNode) {
+        cout << "\nInorder traversal: ";
+        printInorder(focusNode);
+
+        cout <<"\nPreorder traversal: ";
+        printPreorder(focusNode);
+
+        cout << "\nPostorder traversal: ";
+        printPostorder(focusNode);
+
+        cout << "\nLevelorder traversal: ";
+        printLevelorder(focusNode);
+
+        cout << endl;
+    }
+
     // function to find the height of tree
     int height(Node* focusNode) {
         if (focusNode == nullptr)
@@ -138,14 +153,15 @@ public:
         }
     }
 
-    // function to delete last node
-    void deleteLastNode(Node* focusNode) {
+    // function to delete last node (& return the value of that last node //***)
+    int deleteLastNode(Node* focusNode) {
         if (focusNode == nullptr) // incase of 0 nodes
-            return;
+            return 0; //***
 
         if (focusNode -> left == nullptr && focusNode -> right == nullptr) { // incase of just root node
+            int d = root -> data; //***
             root = nullptr;
-            return;
+            return d; //***
         }
 
         else { // level order traversal
@@ -159,12 +175,14 @@ public:
                 q.pop();
 
                 if (temp -> left == nullptr) { // if left child is nullptr
+                    int d = prevNode -> right -> data; //***
                     prevNode -> right = nullptr; // delete right child of previous node
-                    return;
+                    return d; //***
                 }
                 if (temp -> right == nullptr) { // if right child is nullptr
+                    int d = temp -> left -> data; //***
                     temp -> left = nullptr; // delete left child of same node
-                    return;
+                    return d; //***
                 }
 
                 q.push(temp -> left);
@@ -173,62 +191,37 @@ public:
                 prevNode = temp;
             }
         }
+        return 0;
     }
 
     // function to delete a node with data d
+    // deletes last node and replaces the value of last node in node with data d
     void deleteNode(int d) {
         if (root == nullptr)
             return;
 
         if (root -> data == d) {
-            Node** lastNode = getLastNode();
-            (*lastNode) -> left = root -> left;
-            (*lastNode) -> right = root -> right;
-            root = *lastNode;
-            *lastNode = nullptr;
+            root -> data = deleteLastNode(root);
             return;
         }
 
         queue<Node*> q;
         q.push(root);
 
-        Node* parent;
-
         while (q.empty() == false) {
             Node* temp = q.front();
-            parent = temp;
             q.pop();
 
             if (temp == nullptr)
-                break;
+                return;
 
-            temp = parent -> left;
-            if (temp -> data == d)
-                break;
-            temp = parent -> right;
-            if (temp -> data == d)
-                break;
+            if (temp -> data == d) {
+                temp -> data = deleteLastNode(root);
+                return;
+            }
 
-            q.push(parent -> left);
-            q.push(parent -> right);
-        }
-
-        if (parent -> left -> data = d) {
-            Node** lastNode = getLastNode();
-            (*lastNode) -> left = parent -> left -> left;
-            (*lastNode) -> right = parent -> left -> right;
-            parent -> left = *lastNode;
-            *lastNode = nullptr;
-            return;
-        }
-
-        if (parent -> right -> data = d) {
-            Node** lastNode = getLastNode();
-            (*lastNode) -> left = parent -> right -> left;
-            (*lastNode) -> right = parent -> right -> right;
-            parent -> right = *lastNode;
-            *lastNode = nullptr;
-            return;
+            q.push(temp -> left);
+            q.push(temp -> right);
         }
     }
 
@@ -276,12 +269,10 @@ int main () {
     cout << "\nheight: " << tree.height(tree.root) << endl;
 
     // deleting 3 nodes
-    // for (int i{}; i < 3; i++)
-    //     tree.deleteLastNode(tree.root);
+    for (int i{}; i < 3; i++)
+        tree.deleteLastNode(tree.root);
 
-    tree.deleteNode(50);
+    tree.deleteNode(10);
 
     tree.printTree(tree.root);
-
-    
 }
