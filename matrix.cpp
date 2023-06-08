@@ -74,7 +74,8 @@ vector<vector<int>> combine(array<vector<vector<int>>, 4> v) {
     return m;
 }
 
-vector<vector<int>> add(vector<vector<int>> m0, vector<vector<int>> m1) {
+// overloading addition operator (+) for 2D vectors
+vector<vector<int>> operator+ (vector<vector<int>> const &m0, vector<vector<int>> const&m1) {
     int n = m0.size();
 
     vector<vector<int>> result(n, vector<int>(n, 0));
@@ -86,7 +87,21 @@ vector<vector<int>> add(vector<vector<int>> m0, vector<vector<int>> m1) {
     return result;
 }
 
-vector<vector<int>> multiply(vector<vector<int>> m0, vector<vector<int>> m1) {
+// overloading subtraction operator (-) for 2D vectors
+vector<vector<int>> operator- (vector<vector<int>> m0, vector<vector<int>> m1) {
+    int n = m0.size();
+
+    vector<vector<int>> result(n, vector<int>(n, 0));
+
+    for (int i{}; i < n; i++)
+        for (int j{}; j < n; j++)
+            result[i][j] = m0[i][j] - m1[i][j];
+
+    return result;
+}
+
+// overloading mutltiplication operator (*) for 2D vectors
+vector<vector<int>> operator* (vector<vector<int>> m0, vector<vector<int>> m1) {
     int n = m0.size();
 
     if (n == 1)
@@ -98,12 +113,15 @@ vector<vector<int>> multiply(vector<vector<int>> m0, vector<vector<int>> m1) {
     M0 = split(m0);
     M1 = split(m1);
     
-    vector<vector<int>> a0{add(multiply(M0[0], M1[0]), multiply(M0[1], M1[2]))};
-    vector<vector<int>> a1{add(multiply(M0[0], M1[1]), multiply(M0[1], M1[3]))};
-    vector<vector<int>> a2{add(multiply(M0[2], M1[0]), multiply(M0[3], M1[2]))};
-    vector<vector<int>> a3{add(multiply(M0[2], M1[1]), multiply(M0[3], M1[3]))};
+    vector<vector<int>> p1{M0[0] * (M1[1] - M1[3])},
+        p2{(M0[0] + M0[1]) * M1[3]},
+        p3{(M0[2] + M0[3]) * M1[0]},
+        p4{M0[3] * (M1[2] - M1[0])},
+        p5{(M0[0] + M0[3]) * (M1[0] + M1[3])},
+        p6{(M0[1] - M0[3]) * (M1[2] + M1[3])},
+        p7{(M0[0] - M0[2]) * (M1[0] + M1[1])};
 
-    return combine({a0, a1, a2, a3});
+    return combine({p5 + p4 - p2 + p6, p1 + p2, p3 + p4, p1 + p5 - p3 - p7});
 }
 
 class Matrix {
@@ -118,7 +136,7 @@ public:
     Matrix operator+ (Matrix const &mat);
 };
 
-// overloading multiplication operator (*)
+// overloading multiplication operator (*) for Matrix
 Matrix Matrix::operator* (Matrix const &mat) {
     vector<vector<int>> m0{this -> m}, m1{mat.m};
 
@@ -131,17 +149,30 @@ Matrix Matrix::operator* (Matrix const &mat) {
     int columns = static_cast<int>(m1[0].size());
     int n = static_cast<int>(m1.size());
 
+    // normal matrix multiplication
+    if (n < 300) {
+        vector<vector<int>> vec(rows, vector<int>(columns, 0));
+
+        for (int i{}; i < rows; i++)
+            for (int j{}; j < columns; j++)
+                for (int k{}; k < n; k++)
+                    vec[i][j] += m0[i][k] * m1[k][j];
+
+        return Matrix(vec);
+    }
+
+    // Strassen Matrix Mulitplication
     vector<vector<int>> result;
 
     dimensionalize(m0, m1);
-    result = multiply(m0, m1);
+    result = m0 * m1;
 
     result = undimensionalize(result, rows, columns);
 
     return Matrix(result);
 }
 
-// overloading addition operator (+)
+// overloading addition operator (+) for Matrix
 Matrix Matrix::operator+ (Matrix const &mat) {
     vector<vector<int>> m0{this -> m}, m1{mat.m};
 
@@ -162,7 +193,7 @@ Matrix Matrix::operator+ (Matrix const &mat) {
     return Matrix(result);
 }
 
-// overloading stream insertion operator (<<)
+// overloading stream insertion operator (<<) for Matrix
 ostream &operator << (ostream &out, Matrix const &mat) {
     for (vector<int> vec : mat.m) {
         for (int element : vec)
