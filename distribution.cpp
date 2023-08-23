@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
 using namespace std;
 
 void printVec(vector<int> const &vec) {
@@ -10,27 +9,31 @@ void printVec(vector<int> const &vec) {
     cout << endl;
 }
 
-void distribute(vector<int> &vec, int n) {
+// returns index of minimum element
+int min(vector<int> &vec) {
+    int min_index{};
     for (int i{1}; i < vec.size(); i++) {
-        for (int j{}; j < i && n > 0; j++) {
-            --n;
-            if (vec[j] < vec[i]) {
-                vec[j]++;
-            }
-            else break;
+        if (vec[i] < vec[min_index]) {
+            min_index = i;
         }
+    }
+    return min_index;
+}
+
+void distribute(vector<int> &vec, int n) {
+    int i{};
+    while (n > 0) {
+        i = min(vec);
+        vec[i]++;
+        n--;
     }
 }
 
 int main() {
     vector<int> vec{3, 5, 8, 4, 6, 7, 4};
-    int n = 3;
+    int n = 100;
 
     cout << "Initial vector: " << endl;
-    printVec(vec);
-
-    sort(vec.begin(), vec.end());
-    cout << "\nSorted vector: " << endl;
     printVec(vec);
 
     distribute(vec, n);
