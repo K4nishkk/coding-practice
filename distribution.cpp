@@ -1,22 +1,29 @@
-// Simplest program to distribute items to containers
+// Program to distribute items to containers
 // already containing some number of items
 
-// OBJECTIVE - distribute items evenly such that
-// difference between final max and min items is minimized
+// OBJECTIVE - distribute items evenly such that final
+// difference between containers with max and min items is minimum
 
-// CURRENT APPROACH - find container with min number of items
-// & add difference of second lowest and lowest element or n, repeat until all items are distributed
-// TIME COMPLEXITY - O(nm) n = no. of items to be distributed, m = size of array
+// CURRENT APPROACH - 
+// → sort the array in ascending order
+// → find the index i, till which all elements before i (0, 1, ... i - 1), can be assigned to vec[i]
+//      without needing to subtract any number from them in order to get final vector
+// → find number of items left to be added after the previous operation (n - items_distributed; n = initial number of items to be added) 
+// → find same number of items need to be added to elements from index 0 - i ((n - items_distributed) / (i + 1) => avg of no. of items left; i + 1 = no. of containers)
+// → find number of container that'll have one extra item ((n - items_distributed) % (i + 1) => remainder of no. of items left)
+// → assign value of vec[0, 1, ... i] = vec[i] + avg of no. of items left + 1(for the first remainder items)
+
+// TIME COMPLEXITY - O(nlogn) sorting + O(n - 1) difference_vector + O(n) distribution_vector = O(nlogn)
 
 #include <iostream>
 #include <vector>
 #include <algorithm>
 using namespace std;
 
+// to display the vector
 void printVec(vector<int> const &vec) {
-    for (int i{}; i < vec.size(); i++) {
+    for (int i{}; i < vec.size(); i++)
         cout << vec[i] << "   ";
-    }
     cout << endl;
 }
 
@@ -24,65 +31,36 @@ void printVec(vector<int> const &vec) {
 vector<int> diff(vector<int> const &vec) {
     vector<int> diff_vec;
     diff_vec.resize(vec.size() - 1);
-    for (int i{0}; i < vec.size() - 1; i++) {
+
+    for (int i{0}; i < vec.size() - 1; i++)
         diff_vec[i] = vec[i + 1] - vec[i];
-    }
+
     return diff_vec;
 }
 
-// returns min_index and difference between second and first min element
-vector<int> min(vector<int> &vec) {
-    int min_index{}, second_min_index{};
-    for (int i{1}; i < vec.size(); i++) { // runs m - 1 times (m = no. of elements in array)
-        if (vec[i] < vec[min_index]) {
-            second_min_index = min_index;
-            min_index = i;
-        }
-    }
-    return {min_index, vec[second_min_index] - vec[min_index]};
-}
+void distribute(vector<int> const &diff_vec, vector<int> &vec2, int n) {
+    int items_distributed{}; // number of items already distributed (currently 0)
 
-void distribute(vector<int> &vec, int n) {
-    int min_index{}, diff{};
-    while (n > 0) {
-        vector<int> v = min(vec);
-        min_index = v[0];
-        diff = v[1];
-        
-        if (diff == 0) { // otherwise infinite loop for diff == 0
-            vec[min_index]++;
-            n--;
-        }
-        else if (n > diff) {
-            vec[min_index] += diff;
-            n -= diff;
-        }
-        else {
-            vec[min_index] += n;
-            break;
-        }
-    }
-}
-
-void add(vector<int> const &diff_vec, vector<int> &vec2, int n) {
-    int k{}, i;
+    int i;
     for (i = 0; i < diff_vec.size(); i++) {
-        if (k  + (i + 1) * diff_vec[i] <= n) {
-            k += (i + 1) * diff_vec[i];
-        }
+        int k = (i + 1) * diff_vec[i]; // no. of items distributed to indices 0 - i in next iteration
+
+        if (items_distributed + k <= n) // distribute only if sufficient items left
+            items_distributed += k;
+
         else break;
     }
-    int avg_left{(n - k) / (i + 1)}, remainder{(n - k) % (i + 1)};
-    for (int j{}; j <= i; j++) {
-        vec2[j] = vec2[i] + avg_left + (j < remainder ? 1 : 0);
-    }
-    cout << "\ni: " << i << "   k: " << k << "   avg left: " << (n - k) / (i + 1) << "   remainder: " << (n - k) % (i + 1) 
-        << "   n-k: " << n - k << endl;
+
+    int avg_items_left{(n - items_distributed) / (i + 1)}; // average item per container left
+    int remainder{(n - items_distributed) % (i + 1)}; // remainder for division of items left (n - k) with no. of containers (i + 1)
+
+    for (int j{}; j <= i; j++) // assign final values to items with indices 0 - i
+        vec2[j] = vec2[i] + avg_items_left + (j < remainder ? 1 : 0);
 }
 
 int main() {
     vector<int> vec{12, 5, 9, 17, 22, 6, 4, 13};
-    int n = 150;
+    int n = 15;
 
     cout << "Initial vector:" << endl;
     printVec(vec);
@@ -90,20 +68,12 @@ int main() {
     sort(vec.begin(), vec.end());
     cout << "\nSorted vector:" << endl;
     printVec(vec);
-    
-    vector<int> vec2{vec};
 
     vector<int> diff_vec;
     diff_vec.resize(vec.size() - 1);
     diff_vec = diff(vec);
-    cout << "\nDifference of consequtive elements:" << endl;
-    printVec(diff_vec);
 
-    distribute(vec, n);
+    distribute(diff_vec, vec, n);
     cout << "\nDistributed vector:" << endl;
     printVec(vec);
-
-    add(diff_vec, vec2, n);
-    cout << "\nvec2:" << endl;
-    printVec(vec2);
 }
