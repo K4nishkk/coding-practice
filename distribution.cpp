@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 void printVec(vector<int> const &vec) {
@@ -17,6 +18,16 @@ void printVec(vector<int> const &vec) {
         cout << vec[i] << "   ";
     }
     cout << endl;
+}
+
+// to find difference between consequtive elements
+vector<int> diff(vector<int> const &vec) {
+    vector<int> diff_vec;
+    diff_vec.resize(vec.size() - 1);
+    for (int i{0}; i < vec.size() - 1; i++) {
+        diff_vec[i] = vec[i + 1] - vec[i];
+    }
+    return diff_vec;
 }
 
 // returns min_index and difference between second and first min element
@@ -53,14 +64,46 @@ void distribute(vector<int> &vec, int n) {
     }
 }
 
-int main() {
-    vector<int> vec{3, 5, 8, 4, 6, 7, 4};
-    int n = 16;
+void add(vector<int> const &diff_vec, vector<int> &vec2, int n) {
+    int k{}, i;
+    for (i = 0; i < diff_vec.size(); i++) {
+        if (k  + (i + 1) * diff_vec[i] <= n) {
+            k += (i + 1) * diff_vec[i];
+        }
+        else break;
+    }
+    int avg_left{(n - k) / (i + 1)}, remainder{(n - k) % (i + 1)};
+    for (int j{}; j <= i; j++) {
+        vec2[j] = vec2[i] + avg_left + (j < remainder ? 1 : 0);
+    }
+    cout << "\ni: " << i << "   k: " << k << "   avg left: " << (n - k) / (i + 1) << "   remainder: " << (n - k) % (i + 1) 
+        << "   n-k: " << n - k << endl;
+}
 
-    cout << "Initial vector: " << endl;
+int main() {
+    vector<int> vec{12, 5, 9, 17, 22, 6, 4, 13};
+    int n = 150;
+
+    cout << "Initial vector:" << endl;
     printVec(vec);
+
+    sort(vec.begin(), vec.end());
+    cout << "\nSorted vector:" << endl;
+    printVec(vec);
+    
+    vector<int> vec2{vec};
+
+    vector<int> diff_vec;
+    diff_vec.resize(vec.size() - 1);
+    diff_vec = diff(vec);
+    cout << "\nDifference of consequtive elements:" << endl;
+    printVec(diff_vec);
 
     distribute(vec, n);
-    cout << "\nDistributed vector: " << endl;
+    cout << "\nDistributed vector:" << endl;
     printVec(vec);
+
+    add(diff_vec, vec2, n);
+    cout << "\nvec2:" << endl;
+    printVec(vec2);
 }
